@@ -1,0 +1,14 @@
+<menu xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <item
+        xmlns:mymenu="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/action_pause"
+        mymenu:showAsAction="ifRoom|withText"
+        android:title="Pause" />
+    <item
+        android:id="@+id/action_settings"
+        android:title="settings"/>
+
+
+</menu>
