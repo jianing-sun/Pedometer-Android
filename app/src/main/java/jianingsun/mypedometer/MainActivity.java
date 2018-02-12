@@ -1,12 +1,18 @@
 package jianingsun.mypedometer;
 
+import android.app.AlertDialog;
 import android.app.FragmentTransaction;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
+import android.text.method.LinkMovementMethod;
 import android.view.MenuItem;
+import android.widget.TextView;
 
 /**
  * Created by jianingsun on 2018-02-11.
@@ -36,12 +42,18 @@ public class MainActivity extends FragmentActivity{
         }
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_settings:
-                break;
 
+    public boolean optionsItemSelected(final MenuItem item) {
+
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                getFragmentManager().popBackStackImmediate();
+                break;
+            case R.id.action_settings:
+                getFragmentManager().beginTransaction()
+                        .replace(android.R.id.content, new SettingFragment()).addToBackStack(null)
+                        .commit();
+                break;
         }
         return true;
     }

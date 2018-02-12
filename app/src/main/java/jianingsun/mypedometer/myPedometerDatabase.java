@@ -5,7 +5,11 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Pair;
 
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -161,6 +165,55 @@ public class myPedometerDatabase extends SQLiteOpenHelper {
         int re = getSteps(-1);
         return re == Integer.MIN_VALUE ? 0 : re;
     }
+
+    public List<Pair<Long, Integer>> getLastEntries(int num) {
+        Cursor c = getReadableDatabase()
+                .query(DB_NAME, new String[]{"date", "steps"}, "date > 0", null, null, null,
+                        "date DESC", String.valueOf(num));
+        int max = c.getCount();
+        List<Pair<Long, Integer>> result = new ArrayList<>(max);
+        if (c.moveToFirst()) {
+            do {
+                result.add(new Pair<>(c.getLong(0), c.getInt(1)));
+            } while (c.moveToNext());
+        }
+        return result;
+    }
+
+    public int getRecord() {
+        Cursor c = getReadableDatabase()
+                .query(DB_NAME, new String[]{"MAX(steps)"}, "date > 0", null, null, null, null);
+        c.moveToFirst();
+        int re = c.getInt(0);
+        c.close();
+        return re;
+    }
+
+    public Pair<Date, Integer> getRecordData() {
+        Cursor c = getReadableDatabase()
+                .query(DB_NAME, new String[]{"date, steps"}, "date > 0", null, null, null,
+                        "steps DESC", "1");
+        c.moveToFirst();
+        Pair<Date, Integer> p = new Pair<Date, Integer>(new Date(c.getLong(0)), c.getInt(1));
+        c.close();
+        return p;
+    }
+
+    public int getSteps(final long start, final long end) {
+        Cursor c = getReadableDatabase()
+                .query(DB_NAME, new String[]{"SUM(steps)"}, "date >= ? AND date <= ?",
+                        new String[]{String.valueOf(start), String.valueOf(end)}, null, null, null);
+        int re;
+        if (c.getCount() == 0) {
+            re = 0;
+        } else {
+            c.moveToFirst();
+            re = c.getInt(0);
+        }
+        c.close();
+        return re;
+    }
+
 
 }
 

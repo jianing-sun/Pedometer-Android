@@ -34,6 +34,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 public class MainFragment extends Fragment implements SensorEventListener {
 
@@ -47,9 +48,7 @@ public class MainFragment extends Fragment implements SensorEventListener {
     private boolean showSteps = true;
     public final static NumberFormat formatter = NumberFormat.getInstance(Locale.getDefault());
 
-    final static int DEFAULT_GOAL = 1000;
-    final static float DEFAULT_STEP_SIZE = Locale.getDefault() == Locale.US ? 2.5f : 50;
-    final static String DEFAULT_STEP_UNIT = Locale.getDefault() == Locale.US ? "ft" : "cm";
+
 
 
     @Override
@@ -62,7 +61,7 @@ public class MainFragment extends Fragment implements SensorEventListener {
         Current = new PieModel("", 0 , Color.parseColor("#99CC00"));
         pc.addPieSlice(Current);
 
-        Goal = new PieModel("", DEFAULT_GOAL, Color.parseColor("#CC0000"));
+        Goal = new PieModel("", SettingFragment.DEFAULT_GOAL, Color.parseColor("#CC0000"));
         pc.addPieSlice(Goal);
 
         pc.setOnClickListener(new View.OnClickListener() {
@@ -90,7 +89,7 @@ public class MainFragment extends Fragment implements SensorEventListener {
         todayOffset = db.getSteps(Util.getToday());
 
         SharedPreferences prefs = getActivity().getSharedPreferences("pedometer", Context.MODE_PRIVATE);
-        goal = prefs.getInt("goal", DEFAULT_GOAL);
+        goal = prefs.getInt("goal", SettingFragment.DEFAULT_GOAL);
         since_boot = db.getCurrentSteps();
         int pauseDifference = since_boot - prefs.getInt("pauseCount", since_boot);
 
@@ -132,6 +131,7 @@ public class MainFragment extends Fragment implements SensorEventListener {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setHasOptionsMenu(true);
     }
 
     // TODO: add the unit of distance
@@ -141,7 +141,7 @@ public class MainFragment extends Fragment implements SensorEventListener {
 //            ((TextView) getView().findViewById(R.id.unit)).setText("steps");
 //        }
         updatePie();
-//        updateBar();
+        updateBars();
     }
 
     @Override
@@ -195,10 +195,10 @@ public class MainFragment extends Fragment implements SensorEventListener {
             // update only every 10 steps when displaying distance
             SharedPreferences prefs =
                     getActivity().getSharedPreferences("pedometer", Context.MODE_PRIVATE);
-            float stepsize = prefs.getFloat("stepsize_value", DEFAULT_STEP_SIZE);
+            float stepsize = prefs.getFloat("stepsize_value", SettingFragment.DEFAULT_STEP_SIZE);
             float distance_today = steps_today * stepsize;
             float distance_total = (total_start + steps_today) * stepsize;
-            if (prefs.getString("stepsize_unit", DEFAULT_STEP_UNIT)
+            if (prefs.getString("stepsize_unit", SettingFragment.DEFAULT_STEP_UNIT)
                     .equals("cm")) {
                 distance_today /= 100000;
                 distance_total /= 100000;
@@ -212,23 +212,78 @@ public class MainFragment extends Fragment implements SensorEventListener {
         }
     }
 
+    private void updateBars() {
+        SimpleDateFormat df = new SimpleDateFormat("E", Locale.getDefault());
+        BarChart barChart = (BarChart) getView().findViewById(R.id.barchart);
+        if (barChart.getData().size() > 0) barChart.clearChart();
+        int steps;
+        float distance, stepsize = SettingFragment.DEFAULT_STEP_SIZE;
+        boolean stepsize_cm = true;
+        if (!showSteps) {
+            // load some more settings if distance is needed
+            SharedPreferences prefs =
+                    getActivity().getSharedPreferences("pedometer", Context.MODE_PRIVATE);
+            stepsize = prefs.getFloat("stepsize_value", SettingFragment.DEFAULT_STEP_SIZE);
+            stepsize_cm = prefs.getString("stepsize_unit", SettingFragment.DEFAULT_STEP_UNIT)
+                    .equals("cm");
+        }
+        barChart.setShowDecimal(!showSteps); // show decimal in distance view only
+        BarModel bm;
+        myPedometerDatabase db = myPedometerDatabase.getInstance(getActivity());
+        List<Pair<Long, Integer>> last = db.getLastEntries(8);
+        db.close();
+        for (int i = last.size() - 1; i > 0; i--) {
+            Pair<Long, Integer> current = last.get(i);
+            steps = current.second;
+            if (steps > 0) {
+                bm = new BarModel(df.format(new Date(current.first)), 0,
+                        steps > goal ? Color.parseColor("#99CC00") : Color.parseColor("#0099cc"));
+                if (showSteps) {
+                    bm.setValue(steps);
+                } else {
+                    distance = steps * stepsize;
+                    if (stepsize_cm) {
+                        distance /= 100000;
+                    } else {
+                        distance /= 5280;
+                    }
+                    distance = Math.round(distance * 1000) / 1000f; // 3 decimals
+                    bm.setValue(distance);
+                }
+                barChart.addBar(bm);
+            }
+        }
+        if (barChart.getData().size() > 0) {
+            barChart.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(final View v) {
+                    Statistics.getDialog(getActivity(), since_boot).show();
+                }
+            });
+            barChart.startAnimation();
+        } else {
+            barChart.setVisibility(View.GONE);
+        }
+    }
+
 
     @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+    public void onCreateOptionsMenu(final Menu menu, final MenuInflater inflater) {
         inflater.inflate(R.menu.main, menu);
-        MenuItem pause = menu.getItem(0);
+//        MenuItem pause = menu.getItem(0);
+        //pause.setTitle("Pause");
 
 
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
+    public boolean onOptionsItemSelected(final MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.action_pause:
-                Toast.makeText(getContext(), "???", Toast.LENGTH_SHORT).show();
-                return true;
+//            case R.id.action_pause:
+//                Toast.makeText(getContext(), "???", Toast.LENGTH_SHORT).show();
+//                return true;
             default:
-                return true;
+                return ((MainActivity) getActivity()).optionsItemSelected(item);
         }
     }
 }
