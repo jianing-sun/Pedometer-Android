@@ -20,12 +20,12 @@ abstract class Statistics {
         final Dialog d = new Dialog(c);
         d.requestWindowFeature(Window.FEATURE_NO_TITLE);
         d.setContentView(R.layout.statistics);
-//        d.findViewById(R.id.close).setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                d.dismiss();
-//            }
-//        });
+        d.findViewById(R.id.close).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                d.dismiss();
+            }
+        });
         myPedometerDatabase db = myPedometerDatabase.getInstance(c);
 
         Pair<Date, Integer> record = db.getRecordData();
@@ -37,7 +37,7 @@ abstract class Statistics {
         date.add(Calendar.DATE, -6);
 
         int thisWeek = db.getSteps(date.getTimeInMillis(), System.currentTimeMillis()) + since_boot;
-
+        System.out.println(thisWeek);
         date.setTimeInMillis(Util.getToday());
         date.set(Calendar.DAY_OF_MONTH, 1);
         int thisMonth = db.getSteps(date.getTimeInMillis(), System.currentTimeMillis()) + since_boot;

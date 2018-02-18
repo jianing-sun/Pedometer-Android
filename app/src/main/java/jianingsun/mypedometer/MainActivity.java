@@ -16,10 +16,16 @@ import android.widget.TextView;
 
 /**
  * Created by jianingsun on 2018-02-11.
+ * used to call/connect MainFragment with the setting menu
  */
 
 public class MainActivity extends FragmentActivity{
 
+    /**
+     * start sensor service
+     * create MainFragment and replace the content in the view of main activity
+     * @param savedInstanceState
+     */
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -49,6 +55,7 @@ public class MainActivity extends FragmentActivity{
             case android.R.id.home:
                 getFragmentManager().popBackStackImmediate();
                 break;
+            // add SettingFragment to back stack
             case R.id.action_settings:
                 getFragmentManager().beginTransaction()
                         .replace(android.R.id.content, new SettingFragment()).addToBackStack(null)

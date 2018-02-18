@@ -25,6 +25,14 @@
         android:text="10.000"
         android:layout_marginTop="90dp" />
 
+    <TextView
+        android:id="@+id/units"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/steps"
+        android:layout_centerHorizontal="true"
+        android:text="TextView" />
+
     <org.eazegraph.lib.charts.BarChart xmlns:eaze="http://schemas.android.com/apk/res-auto"
         android:id="@+id/barchart"
         android:layout_width="match_parent"
@@ -34,7 +42,6 @@
         android:layout_marginBottom="63dp"
         eaze:egLegendHeight="35dp"
         eaze:egShowValues="true" />
-
 
 
 </RelativeLayout>

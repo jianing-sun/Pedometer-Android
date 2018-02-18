@@ -41,15 +41,12 @@ public class SensorListener extends Service implements SensorEventListener {
 
     @Override
     public void onAccuracyChanged(final Sensor sensor, int accuracy) {
-        // nobody knows what happens here: step value might magically decrease
-        // when this method is called...
-//        if (BuildConfig.DEBUG) Logger.log(sensor.getName() + " accuracy changed: " + accuracy);
+        // won't happen
     }
 
     @Override
     public void onSensorChanged(final SensorEvent event) {
         if (event.values[0] > Integer.MAX_VALUE) {
-//            if (BuildConfig.DEBUG) Logger.log("probably not a real value: " + event.values[0]);
             return;
         } else {
             steps = (int) event.values[0];
@@ -77,8 +74,6 @@ public class SensorListener extends Service implements SensorEventListener {
             db.close();
             lastSaveSteps = steps;
             lastSaveTime = System.currentTimeMillis();
-//            updateNotificationState();
-//            startService(new Intent(this, WidgetUpdateService.class));
         }
     }
 
@@ -91,7 +86,6 @@ public class SensorListener extends Service implements SensorEventListener {
     public int onStartCommand(final Intent intent, int flags, int startId) {
         if (intent != null && ACTION_PAUSE.equals(intent.getStringExtra("action"))) {
             if (BuildConfig.DEBUG)
-//                Logger.log("onStartCommand action: " + intent.getStringExtra("action"));
             if (steps == 0) {
                 myPedometerDatabase db = myPedometerDatabase.getInstance(this);
                 steps = db.getCurrentSteps();
@@ -105,7 +99,6 @@ public class SensorListener extends Service implements SensorEventListener {
                 db.addToLastEntry(-difference);
                 db.close();
                 prefs.edit().remove("pauseCount").commit();
-//                updateNotificationState();
             } else { // pause counting
                 // cancel restart
                 ((AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE))
@@ -113,14 +106,12 @@ public class SensorListener extends Service implements SensorEventListener {
                                 new Intent(this, SensorListener.class),
                                 PendingIntent.FLAG_UPDATE_CURRENT));
                 prefs.edit().putInt("pauseCount", steps).commit();
-//                updateNotificationState();
                 stopSelf();
                 return START_NOT_STICKY;
             }
         }
 
         if (intent != null && intent.getBooleanExtra(ACTION_UPDATE_NOTIFICATION, false)) {
-//            updateNotificationState();
         } else {
             updateIfNecessary();
         }
@@ -139,15 +130,12 @@ public class SensorListener extends Service implements SensorEventListener {
     @Override
     public void onCreate() {
         super.onCreate();
-//        if (BuildConfig.DEBUG) Logger.log("SensorListener onCreate");
         reRegisterSensor();
-//        updateNotificationState();
     }
 
     @Override
     public void onTaskRemoved(final Intent rootIntent) {
         super.onTaskRemoved(rootIntent);
-//        if (BuildConfig.DEBUG) Logger.log("sensor service task removed");
         // Restart service in 500 ms
         ((AlarmManager) getSystemService(Context.ALARM_SERVICE))
                 .set(AlarmManager.RTC, System.currentTimeMillis() + 500, PendingIntent
@@ -157,74 +145,22 @@ public class SensorListener extends Service implements SensorEventListener {
     @Override
     public void onDestroy() {
         super.onDestroy();
-//        if (BuildConfig.DEBUG) Logger.log("SensorListener onDestroy");
         try {
             SensorManager sm = (SensorManager) getSystemService(SENSOR_SERVICE);
             sm.unregisterListener(this);
         } catch (Exception e) {
-//            if (BuildConfig.DEBUG) Logger.log(e);
             e.printStackTrace();
         }
     }
 
-//    private void updateNotificationState() {
-////        if (BuildConfig.DEBUG) Logger.log("SensorListener updateNotificationState");
-//        SharedPreferences prefs = getSharedPreferences("pedometer", Context.MODE_PRIVATE);
-//        NotificationManager nm =
-//                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-//        if (prefs.getBoolean("notification", true)) {
-//            int goal = prefs.getInt("goal", 10000);
-//            myPedometerDatabase db = myPedometerDatabase.getInstance(this);
-//            int today_offset = db.getSteps(Util.getToday());
-//            if (steps == 0)
-//                steps = db.getCurrentSteps(); // use saved value if we haven't anything better
-//            db.close();
-//            Notification.Builder notificationBuilder = new Notification.Builder(this);
-//            if (steps > 0) {
-//                if (today_offset == Integer.MIN_VALUE) today_offset = -steps;
-//                notificationBuilder.setProgress(goal, today_offset + steps, false).setContentText(
-//                        today_offset + steps >= goal ? getString(R.string.goal_reached_notification,
-//                                NumberFormat.getInstance(Locale.getDefault())
-//                                        .format((today_offset + steps))) :
-//                                getString(R.string.notification_text,
-//                                        NumberFormat.getInstance(Locale.getDefault())
-//                                                .format((goal - today_offset - steps))));
-//            } else { // still no step value?
-//                notificationBuilder
-//                        .setContentText(getString(R.string.your_progress_will_be_shown_here_soon));
-//            }
-//            boolean isPaused = prefs.contains("pauseCount");
-//            notificationBuilder.setPriority(Notification.PRIORITY_MIN).setShowWhen(false)
-//                    .setContentTitle(isPaused ? getString(R.string.ispaused) :
-//                            getString(R.string.notification_title)).setContentIntent(PendingIntent
-//                    .getActivity(this, 0, new Intent(this, Activity_Main.class),
-//                            PendingIntent.FLAG_UPDATE_CURRENT))
-//                    .setSmallIcon(R.drawable.ic_notification)
-//                    .addAction(isPaused ? R.drawable.ic_resume : R.drawable.ic_pause,
-//                            isPaused ? getString(R.string.resume) : getString(R.string.pause),
-//                            PendingIntent.getService(this, 4, new Intent(this, SensorListener.class)
-//                                            .putExtra("action", ACTION_PAUSE),
-//                                    PendingIntent.FLAG_UPDATE_CURRENT)).setOngoing(true);
-//            nm.notify(NOTIFICATION_ID, notificationBuilder.build());
-//        } else {
-//            nm.cancel(NOTIFICATION_ID);
-//        }
-//    }
 
     private void reRegisterSensor() {
-//        if (BuildConfig.DEBUG) Logger.log("re-register sensor listener");
+
         SensorManager sm = (SensorManager) getSystemService(SENSOR_SERVICE);
         try {
             sm.unregisterListener(this);
         } catch (Exception e) {
-//            if (BuildConfig.DEBUG) Logger.log(e);
             e.printStackTrace();
-        }
-
-        if (BuildConfig.DEBUG) {
-//            Logger.log("step sensors: " + sm.getSensorList(Sensor.TYPE_STEP_COUNTER).size());
-            if (sm.getSensorList(Sensor.TYPE_STEP_COUNTER).size() < 1) return; // emulator
-//            Logger.log("default: " + sm.getDefaultSensor(Sensor.TYPE_STEP_COUNTER).getName());
         }
 
         // enable batching with delay of max 5 min

@@ -14,10 +14,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Created by jianingsun on 2018-02-10.
+ * SQLite Database
  */
 
 public class myPedometerDatabase extends SQLiteOpenHelper {
 
+    // define database name and default version
     private final static String DB_NAME = "steps";
     private final static int DB_VERSION = 2;
 
@@ -110,13 +112,6 @@ public class myPedometerDatabase extends SQLiteOpenHelper {
         c.close();
         return re;
     }
-
-    // TODO: get the maximum of steps walked in one day
-
-    // TODO: get the maximum of steps walked in one day and the date that happend
-
-
-
 
 
     public int getSteps(final long date) {
